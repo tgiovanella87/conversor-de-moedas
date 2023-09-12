@@ -16,8 +16,6 @@
           euro: numeroValor * cotacoes.euro,
           dolar: numeroValor * cotacoes.dolar,
         };
-
-        console.info(valoresConvertidos);
         return valoresConvertidos;
       }
 
@@ -35,8 +33,8 @@
           }),
           $.ready
         ).done((resultado) => {
+          $("#carregando").fadeOut("400");
           cotacoes = resultado[0];
-          console.info("cotacoes", cotacoes);
 
           //DOLAR
           const dolarMaior = new Intl.NumberFormat("pt-BR", {
@@ -116,7 +114,7 @@
     </script>
   </head>
   <body>
-    <!-- <div id="carregando">Carregando cotações ...</div> -->
+    <div id="carregando">Carregando cotações ...</div>
     <div id="container">
       <div id="form">
         <div class="secoes"><h3>Formulário</h3></div>
