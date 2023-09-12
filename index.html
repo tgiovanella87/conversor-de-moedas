@@ -1,7 +1,171 @@
 <html>
   <head>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js" />
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/plentz/jquery-maskmoney@master/dist/jquery.maskMoney.min.js"></script>
+
     <title>Conversor de Moedas</title>
+    <link href="css/padrao.css" rel="stylesheet" />
+    <script>
+      function converterMoeda(valorReal, cotacoes) {
+        let numeroValor = valorReal.replace(".", "");
+        numeroValor = numeroValor.replace(",", ".");
+        numeroValor = parseFloat(numeroValor);
+
+        const valoresConvertidos = {
+          bitcoin: numeroValor * cotacoes.bitcoin,
+          euro: numeroValor * cotacoes.euro,
+          dolar: numeroValor * cotacoes.dolar,
+        };
+
+        console.info(valoresConvertidos);
+        return valoresConvertidos;
+      }
+
+      $.when($.ready).then(async () => {
+        $("#valor").maskMoney({ thousands: ".", decimal: "," });
+
+        const APIURL =
+          "https://economia.awesomeapi.com.br/last/USD-BRL,EUR-BRL,BTC-BRL";
+        let cotacoes = "";
+
+        $.when(
+          $.getJSON({
+            url: APIURL,
+            dataType: "json",
+          }),
+          $.ready
+        ).done((resultado) => {
+          cotacoes = resultado[0];
+          console.info("cotacoes", cotacoes);
+
+          //DOLAR
+          const dolarMaior = new Intl.NumberFormat("pt-BR", {
+            style: "currency",
+            currency: "USD",
+          }).format(cotacoes["USDBRL"].high.toString());
+
+          const dolarMenor = new Intl.NumberFormat("pt-BR", {
+            style: "currency",
+            currency: "USD",
+          }).format(cotacoes["USDBRL"].low.toString());
+
+          $("#dolarMaior").html(dolarMaior);
+          $("#dolarMenor").html(dolarMenor);
+
+          //EURO
+          const euroMaior = new Intl.NumberFormat("pt-BR", {
+            style: "currency",
+            currency: "EUR",
+          }).format(cotacoes["EURBRL"].high.toString());
+
+          const euroMenor = new Intl.NumberFormat("pt-BR", {
+            style: "currency",
+            currency: "EUR",
+          }).format(cotacoes["EURBRL"].low.toString());
+
+          $("#euroMaior").html(euroMaior);
+          $("#euroMenor").html(euroMenor);
+
+          //BITCOIN
+          const bitcoinMaior = new Intl.NumberFormat("pt-BR", {
+            style: "currency",
+            currency: "BIT",
+          }).format(cotacoes["BTCBRL"].high.toString());
+
+          const bitcoinMenor = new Intl.NumberFormat("pt-BR", {
+            style: "currency",
+            currency: "BIT",
+          }).format(cotacoes["BTCBRL"].low.toString());
+
+          $("#bitcoinMaior").html(bitcoinMaior);
+          $("#bitcoinMenor").html(bitcoinMenor);
+        });
+
+        $("#botaoSolicitar").click(() => {
+          const valor = $("#valor").val();
+          const valoresMoedas = {
+            bitcoin: cotacoes["BTCBRL"].bid.toString(),
+            euro: cotacoes["EURBRL"].bid.toString(),
+            dolar: cotacoes["USDBRL"].bid.toString(),
+          };
+
+          const valorConvertido = converterMoeda(valor, valoresMoedas);
+
+          $("#bitcoinConvertido").html(
+            new Intl.NumberFormat("pt-BR", {
+              style: "currency",
+              currency: "BIT",
+            }).format(valorConvertido.bitcoin)
+          );
+
+          $("#euroConvertido").html(
+            new Intl.NumberFormat("pt-BR", {
+              style: "currency",
+              currency: "EUR",
+            }).format(valorConvertido.euro)
+          );
+
+          $("#dolarConvertido").html(
+            new Intl.NumberFormat("pt-BR", {
+              style: "currency",
+              currency: "USD",
+            }).format(valorConvertido.dolar)
+          );
+        });
+      });
+    </script>
   </head>
-  <body></body>
+  <body>
+    <!-- <div id="carregando">Carregando cotações ...</div> -->
+    <div id="container">
+      <div id="form">
+        <div class="secoes"><h3>Formulário</h3></div>
+        <div id="conteudoForm">
+          <div id="campoValor">
+            <input
+              type="text"
+              id="valor"
+              name="valor"
+              placeholder="digite o valor em Reais R$"
+            />
+          </div>
+          <div id="botao">
+            <button type="button" id="botaoSolicitar">Solicitar</button>
+          </div>
+        </div>
+      </div>
+      <div id="resultado">
+        <h3>Resultado</h3>
+        <div id="valorResultado">
+          <div id="bitcoinConvertido"></div>
+          <div id="euroConvertido"></div>
+          <div id="dolarConvertido"></div>
+        </div>
+      </div>
+      <div id="cotacoes">
+        <div class="secoes"><h3>Variações Maior e Menor das moedas</h3></div>
+        <div id="bitcoin" class="moedas">
+          <div class="nome-moeda">Bitcoin</div>
+          <div class="cotacao-moeda">
+            <div class="maior" id="bitcoinMaior"></div>
+            <div class="menor" id="bitcoinMenor"></div>
+          </div>
+        </div>
+        <div id="euro" class="moedas">
+          <div class="nome-moeda">Euro</div>
+          <div class="cotacao-moeda">
+            <div class="maior" id="euroMaior"></div>
+            <div class="menor" id="euroMenor"></div>
+          </div>
+        </div>
+        <div id="dolar" class="moedas">
+          <div class="nome-moeda">Dólar</div>
+          <div class="cotacao-moeda">
+            <div class="maior" id="dolarMaior"></div>
+            <div class="menor" id="dolarMenor"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
 </html>
