@@ -1,16 +1,38 @@
 <html>
   <head>
+    <!-- script de importação do jquery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- importação da biblioteca jquery para fazer a máscara de dinheiro no input de formulário -->
     <script src="https://cdn.jsdelivr.net/gh/plentz/jquery-maskmoney@master/dist/jquery.maskMoney.min.js"></script>
 
     <title>Conversor de Moedas</title>
+    <!-- importação do CSS que estilizou a página -->
     <link href="css/padrao.css" rel="stylesheet" />
     <script>
       function converterMoeda(valorReal, cotacoes) {
+        /*
+        Esta função converte a moeda multiplicando o valor em real preenchido pelo usuário pelos valores das cotações das moedas conseguidas
+        através da importação dos dados via API
+        */
+
+        //transformando os valores do padrão string para o padrão numérico internacional
         let numeroValor = valorReal.replace(".", "");
         numeroValor = numeroValor.replace(",", ".");
+        //convertendo a string do valor para um Float para poder ser calculado
         numeroValor = parseFloat(numeroValor);
 
+        /*
+        Criando o JSON com os valores convertidos para ser usado pela interface
+
+        Saída:
+
+        {
+          bitcoin: 00.00,
+          euro: 00.00,
+          dolar: 00.00
+        }
+
+        */
         const valoresConvertidos = {
           bitcoin: numeroValor * cotacoes.bitcoin,
           euro: numeroValor * cotacoes.euro,
@@ -19,13 +41,63 @@
         return valoresConvertidos;
       }
 
+      //JQUERY executando os script somente quando todo o carregamento da página já tiver sido feita
+      // para evitar que tenha erro no script
       $.when($.ready).then(async () => {
-        $("#valor").maskMoney({ thousands: ".", decimal: "," });
+        $("#valor").maskMoney({ thousands: ".", decimal: "," }); //definição da máscara para o campo de valor
 
+        // endereço fixo da API utilizada para recuperar os valores da cotação de moedas
         const APIURL =
           "https://economia.awesomeapi.com.br/last/USD-BRL,EUR-BRL,BTC-BRL";
         let cotacoes = "";
 
+        /*
+        A função getJSON é a função disponível no jquery para realizar uma chamada do tipo GET em uma API REST.
+        esta é a transação AJAX que vai solicitar os dados e se tudo estiver correto, a API deverá retornar à este código
+        um JSON com os dados em um formato previamente informado na documentação conforme link: https://docs.awesomeapi.com.br/api-de-moedas
+
+        {
+            "USDBRL": {
+                "code": "USD",
+                "codein": "BRL",
+                "name": "Dólar Americano/Real Brasileiro",
+                "high": "5.734",
+                "low": "5.7279",
+                "varBid": "-0.0054",
+                "pctChange": "-0.09",
+                "bid": "5.7276",
+                "ask": "5.7282",
+                "timestamp": "1618315045",
+                "create_date": "2021-04-13 08:57:27"
+            },
+            "EURBRL": {
+                "code": "EUR",
+                "codein": "BRL",
+                "name": "Euro/Real Brasileiro",
+                "high": "6.8327",
+                "low": "6.8129",
+                "varBid": "-0.0069",
+                "pctChange": "-0.1",
+                "bid": "6.8195",
+                "ask": "6.822",
+                "timestamp": "1618315093",
+                "create_date": "2021-04-13 08:58:15"
+            },
+            "BTCBRL": {
+                "code": "BTC",
+                "codein": "BRL",
+                "name": "Bitcoin/Real Brasileiro",
+                "high": "360000",
+                "low": "340500",
+                "varBid": "17072.9",
+                "pctChange": "4.98",
+                "bid": "359973.9",
+                "ask": "359974",
+                "timestamp": "1618315092",
+                "create_date": "2021-04-13 08:58:12"
+            }
+          }
+        */
         $.when(
           $.getJSON({
             url: APIURL,
@@ -33,6 +105,10 @@
           }),
           $.ready
         ).done((resultado) => {
+          /*
+            O DONE no jQuery vai garantir que as funções aqui inseridas só serão executadas depois que o retorno da API estiver
+            terminado sem erro.
+          */
           $("#carregando").fadeOut("400");
           cotacoes = resultado[0];
 
@@ -79,6 +155,7 @@
           $("#bitcoinMenor").html(bitcoinMenor);
         });
 
+        //função que executa a conversão dos valores e preenche o html da página
         $("#botaoSolicitar").click(() => {
           const valor = $("#valor").val();
           const valoresMoedas = {
@@ -89,6 +166,11 @@
 
           const valorConvertido = converterMoeda(valor, valoresMoedas);
 
+          /*
+            com as funções abaixo fornecidas pelo jQuery é possível facilmente manipular o HTML de um elemento
+            através do seu ID. Nos casos abaixo o que está sendo feito é preencher com os valores convertidos
+            já na formatação de dinheiro conforme biblioteca de internacionalização do Javascript.
+          */
           $("#bitcoinConvertido").html(
             new Intl.NumberFormat("pt-BR", {
               style: "currency",
